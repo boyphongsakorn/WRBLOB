@@ -12,11 +12,14 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
+  // Text,
   useColorScheme,
   View,
+  Button,
 } from 'react-native';
-
+import {NavigationContainer} from '@react-navigation/native';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {
   Colors,
   DebugInstructions,
@@ -25,9 +28,24 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+import HomeScreen from './src/screens/HomeScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import LogoutScreen from './src/screens/LogoutScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Provider, useSelector} from 'react-redux';
+import configureStore from './src/store';
+import {PersistGate} from 'redux-persist/integration/react';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import * as eva from '@eva-design/eva';
+import {EvaIconsPack} from '@ui-kitten/eva-icons';
+import {ApplicationProvider, Icon, IconElement, IconRegistry, Layout, Text} from '@ui-kitten/components';
+
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
 function Section({children, title}: SectionProps): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -58,41 +76,96 @@ function Section({children, title}: SectionProps): JSX.Element {
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
 
+  const {isUserLogin} = useSelector(state => ({
+    isUserLogin: state.userLogin,
+  }));
+
+  const {persistor, store} = configureStore();
+
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    // <Provider store={store}>
+    // <PersistGate loading={null} persistor={persistor}>
+    //   <SafeAreaProvider>
+    //     <ApplicationProvider {...eva} theme={eva.light}>
+    //       <NavigationContainer>
+    //         {isUserLogin ? (
+    //           <Tab.Navigator screenOptions={{headerShown: false}}>
+    //             <Tab.Screen name="Profile" component={ProfileScreen} />
+    //             <Tab.Screen name="Logout" component={LogoutScreen} />
+    //           </Tab.Navigator>
+    //         ) : (
+    //           <Stack.Navigator
+    //             screenOptions={{
+    //               headerShown: false,
+    //             }}>
+    //             <Stack.Screen name="Home" component={LoginScreen} />
+    //           </Stack.Navigator>
+    //         )}
+    //       </NavigationContainer>
+    //     </ApplicationProvider>
+    //   </SafeAreaProvider>
+    // </PersistGate>
+    // </Provider>
+    <PersistGate loading={null} persistor={persistor}>
+      <SafeAreaProvider>
+        <IconRegistry icons={EvaIconsPack} />
+        <ApplicationProvider {...eva} theme={eva.light}>
+          <NavigationContainer>
+            <Tab.Navigator screenOptions={{headerShown: false}}>
+              <Tab.Screen
+                name="Home"
+                component={HomeScreen}
+                options={{
+                  tabBarIcon: ({color, size}) => (
+                    <Icon
+                      name="home-outline"
+                      fill={color}
+                      width={size}
+                      height={size}
+                    />
+                  ),
+                }}
+              />
+              {isUserLogin ? (
+                <Tab.Screen
+                  name="Logout"
+                  component={LogoutScreen}
+                  options={{
+                    tabBarIcon: ({color, size}) => (
+                      <Icon
+                        name="person-outline"
+                        fill={color}
+                        width={size}
+                        height={size}
+                      />
+                    ),
+                  }}
+                />
+              ) : (
+                <Tab.Screen
+                  name="Login"
+                  component={LoginScreen}
+                  options={{
+                    tabBarIcon: ({color, size}) => (
+                      <Icon
+                        name="person-outline"
+                        fill={color}
+                        width={size}
+                        height={size}
+                      />
+                    ),
+                  }}
+                />
+              )}
+            </Tab.Navigator>
+          </NavigationContainer>
+        </ApplicationProvider>
+      </SafeAreaProvider>
+    </PersistGate>
   );
 }
 

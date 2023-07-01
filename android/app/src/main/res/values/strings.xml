@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">WRBLOB</string>
+    <string name="line_channel_id" translatable="false">1654926961</string>
 </resources>
