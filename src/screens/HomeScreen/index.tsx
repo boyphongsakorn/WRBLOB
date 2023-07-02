@@ -8,12 +8,13 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
+  ToastAndroid,
   // Text,
   useColorScheme,
   View,
   // Button,
 } from 'react-native';
-import {NavigationContainer, useFocusEffect} from '@react-navigation/native';
+import {NavigationContainer, useFocusEffect, useScrollToTop} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {
   Colors,
@@ -31,6 +32,7 @@ import {
   Card,
   Divider,
   Layout,
+  Spinner,
   Text,
   TopNavigation,
 } from '@ui-kitten/components';
@@ -38,8 +40,11 @@ import {
 function HomeScreen({navigation}) {
   const [newsData, setnewsData] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [newscount, setnewscount] = React.useState(10);
+  const ref = React.useRef(null);
 
-  let newscount = 10;
+  useScrollToTop(ref);
+  // let newscount = 10;
 
   const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
     const paddingToBottom = 20;
@@ -47,13 +52,14 @@ function HomeScreen({navigation}) {
       layoutMeasurement.height + contentOffset.y >=
       contentSize.height - paddingToBottom
     ) {
-      newscount = newscount + 10;
+      setnewscount(newscount + 10);
       if (newscount > 100) {
-        newscount = 100;
+        setnewscount(100);
       }
-      if (!isLoading) {
-        fetchnews();
-      }
+      // if (!isLoading) {
+      //   fetchnews();
+      // }
+      return true;
     }
   };
 
@@ -71,10 +77,12 @@ function HomeScreen({navigation}) {
 
   const fetchnews = async () => {
     setIsLoading(true);
+    ToastAndroid.show('กำลังโหลดข่าว', ToastAndroid.SHORT);
     try {
       const response = await fetch(
         'https://lotapi.pwisetthon.com/lotnews?count=' + newscount,
       );
+      console.log(newscount);
       const json = await response.json();
       //remove duplicate by title and link
       const unique = json.filter(
@@ -152,8 +160,9 @@ function HomeScreen({navigation}) {
       <TopNavigation title="หน้าแรก" />
       <Divider />
       <ScrollView
+        ref={ref}
         onScroll={({nativeEvent}) => {
-          if (isCloseToBottom(nativeEvent)) {
+          if (isCloseToBottom(nativeEvent) && !isLoading) {
             fetchnews();
           }
         }}>
@@ -190,6 +199,11 @@ function HomeScreen({navigation}) {
             </Card>
           </>
         ))}
+        {isLoading ? (
+          <Text style={{textAlign: 'center'}}>
+            <Spinner /> Loading...
+          </Text>
+        ) : null}
       </ScrollView>
     </>
   );

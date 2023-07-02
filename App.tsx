@@ -40,6 +40,8 @@ import * as eva from '@eva-design/eva';
 import {EvaIconsPack} from '@ui-kitten/eva-icons';
 import {ApplicationProvider, Icon, IconElement, IconRegistry, Layout, Text} from '@ui-kitten/components';
 import {default as mapping} from './mapping.json';
+import LotScreen from './src/screens/LotScreen';
+import HistoryScreen from './src/screens/LotScreen/HistoryScreen';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -118,8 +120,17 @@ function App(): JSX.Element {
           <NavigationContainer>
             <Tab.Navigator screenOptions={{headerShown: false}}>
               <Tab.Screen
-                name="Home"
+                name="หน้าแรก"
                 component={HomeScreen}
+                listeners={({navigation, route}) => ({
+                  tabPress: () => {
+                    const isAtFirstScreenOfStack = !route.state || route.state?.index === 0;
+                    if (navigation.isFocused() && isAtFirstScreenOfStack) {
+                      //scroll to top
+                      route.params?.scrollToTop();
+                    }
+                  },
+                })}
                 options={{
                   tabBarIcon: ({color, size}) => (
                     <Icon
@@ -131,9 +142,30 @@ function App(): JSX.Element {
                   ),
                 }}
               />
+              <Tab.Screen
+                name="สลากกินแบ่ง"
+                component={LotScreen}
+                options={{
+                  tabBarIcon: ({color, size}) => (
+                    <Icon
+                      name="hash-outline"
+                      fill={color}
+                      width={size}
+                      height={size}
+                    />
+                  ),
+                }}
+              />
+              <Tab.Screen
+                name="ประวัติสลากกินแบ่ง"
+                component={HistoryScreen}
+                options={{
+                  tabBarButton: () => null,
+                }}
+              />
               {isUserLogin ? (
                 <Tab.Screen
-                  name="Logout"
+                  name="ออกจากระบบ"
                   component={LogoutScreen}
                   options={{
                     tabBarIcon: ({color, size}) => (
@@ -148,7 +180,7 @@ function App(): JSX.Element {
                 />
               ) : (
                 <Tab.Screen
-                  name="Login"
+                  name="เข้าสู่ระบบ"
                   component={LoginScreen}
                   options={{
                     tabBarIcon: ({color, size}) => (
