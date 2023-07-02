@@ -39,6 +39,7 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import * as eva from '@eva-design/eva';
 import {EvaIconsPack} from '@ui-kitten/eva-icons';
 import {ApplicationProvider, Icon, IconElement, IconRegistry, Layout, Text} from '@ui-kitten/components';
+import {default as mapping} from './mapping.json';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -113,7 +114,7 @@ function App(): JSX.Element {
     <PersistGate loading={null} persistor={persistor}>
       <SafeAreaProvider>
         <IconRegistry icons={EvaIconsPack} />
-        <ApplicationProvider {...eva} theme={eva.light}>
+        <ApplicationProvider {...eva} theme={eva.light} customMapping={mapping}>
           <NavigationContainer>
             <Tab.Navigator screenOptions={{headerShown: false}}>
               <Tab.Screen
