@@ -42,6 +42,8 @@ import {ApplicationProvider, Icon, IconElement, IconRegistry, Layout, Text} from
 import {default as mapping} from './mapping.json';
 import LotScreen from './src/screens/LotScreen';
 import HistoryScreen from './src/screens/LotScreen/HistoryScreen';
+import ContactUsScreen from './src/screens/ContactUsScreen';
+import ShareScreen from './src/screens/LotScreen/ShareScreen';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -159,6 +161,20 @@ function App(): JSX.Element {
               <Tab.Screen
                 name="ประวัติสลากกินแบ่ง"
                 component={HistoryScreen}
+                options={{
+                  tabBarButton: () => null,
+                }}
+              />
+              <Tab.Screen
+                name="แบ่งปันเลขสลาก"
+                component={ShareScreen}
+                options={{
+                  tabBarButton: () => null,
+                }}
+              />
+              <Tab.Screen
+                name="ติดต่อเรา"
+                component={ContactUsScreen}
                 options={{
                   tabBarButton: () => null,
                 }}

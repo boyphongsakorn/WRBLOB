@@ -8,7 +8,7 @@ import {
   Text,
   useColorScheme,
   View,
-  Button,
+  // Button,
 } from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -23,7 +23,7 @@ import LineLogin from '@xmartlabs/react-native-line';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useDispatch} from 'react-redux';
 import {userLoginActions} from '../../store/userLogin';
-import { TopNavigation } from '@ui-kitten/components';
+import { Button, TopNavigation } from '@ui-kitten/components';
 
 function LoginScreen({navigation}) {
   const dispatch = useDispatch();
@@ -53,7 +53,9 @@ function LoginScreen({navigation}) {
       <TopNavigation title="ล็อกอิน" />
       {/* <Text>login screen</Text> */}
       {/* <Text>อยากรวย แต่ก็มีรายจ่ายอยู่ดี</Text> */}
-      <Button title="ล็อกอิน ผ่าน Line" onPress={() => LoginLine()} />
+      <Button size="medium" status="success" onPress={() => LoginLine()}>
+        ล็อกอิน ผ่าน Line
+      </Button>
     </View>
   );
 }

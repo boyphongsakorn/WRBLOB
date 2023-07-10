@@ -31,7 +31,10 @@ import {
   Button,
   Card,
   Divider,
+  Icon,
   Layout,
+  MenuItem,
+  OverflowMenu,
   Spinner,
   Text,
   TopNavigation,
@@ -80,7 +83,9 @@ function HomeScreen({navigation}) {
     ToastAndroid.show('กำลังโหลดข่าว', ToastAndroid.SHORT);
     try {
       const response = await fetch(
-        'https://lotapi.pwisetthon.com/lotnews?count=' + newscount,
+        'https://lotapi.pwisetthon.com/lotnews?count=' +
+          newscount +
+          '&fromapp=true',
       );
       console.log(newscount);
       const json = await response.json();
@@ -89,6 +94,12 @@ function HomeScreen({navigation}) {
         (item, index, self) =>
           index ===
           self.findIndex(t => t.title === item.title && t.link === item.link),
+      );
+      //get only pubDate last 3 month
+      const threeMonthAgo = unique.filter(
+        item =>
+          new Date(item.pubDate) >
+          new Date(new Date().setMonth(new Date().getMonth() - 3)),
       );
       // setnewsData(
       //   unique.map((item) => (
@@ -113,7 +124,7 @@ function HomeScreen({navigation}) {
       //   )),
       // );
       // setnewsData(unique);
-      thaioil(unique);
+      thaioil(threeMonthAgo);
     } catch (error) {}
   };
 
@@ -133,7 +144,7 @@ function HomeScreen({navigation}) {
       newsData2.push({
         title: 'ราคาน้ำมันวันนี้',
         link: 'http://gasprice.kapook.com/gasprice.php',
-        image: 'https://topapi.pwisetthon.com/image',
+        image: 'https://topapi.pwisetthon.com/image?' + dateObj2,
         pubDate: dateObj2,
       });
       //order by pubDate
@@ -141,6 +152,7 @@ function HomeScreen({navigation}) {
         return new Date(b.pubDate) - new Date(a.pubDate);
       });
       setnewsData(newsData2);
+      ToastAndroid.show('โหลดข่าวสำเร็จ', ToastAndroid.SHORT);
       setIsLoading(false);
     } catch (error) {}
   };
@@ -157,7 +169,18 @@ function HomeScreen({navigation}) {
 
   return (
     <>
-      <TopNavigation title="หน้าแรก" />
+      <TopNavigation 
+        title="หน้าแรก"
+        accessoryRight={() => (
+          <Button
+            appearance="ghost"
+            onPress={() => {
+              navigation.navigate('ติดต่อเรา');
+            }}>
+            ติดต่อเรา
+          </Button>
+        )}
+      />
       <Divider />
       <ScrollView
         ref={ref}

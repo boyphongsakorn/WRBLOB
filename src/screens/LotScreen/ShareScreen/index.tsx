@@ -26,6 +26,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {userLoginActions} from '../../store/userLogin';
 import {
   Button,
+  ButtonGroup,
   Card,
   Icon,
   Input,
@@ -36,10 +37,12 @@ import {
   TopNavigationAction,
 } from '@ui-kitten/components';
 
-function HistoryScreen({navigation}) {
+function ShareScreen({navigation}) {
   const [historyData, setHistoryData] = React.useState([]);
   const [value, setValue] = React.useState('');
-  const [result, setResult] = React.useState('');
+  // const [result, setResult] = React.useState('');
+  const [isTooLate, setIsTooLate] = React.useState(false);
+  const [numberType, setNumberType] = React.useState('');
 
   //   const latestLot = async () => {
   //     try {
@@ -67,7 +70,7 @@ function HistoryScreen({navigation}) {
   const checkValue = async value => {
     try {
       console.log(value);
-      setResult('');
+      // setResult('');
       if (value.length > 6) {
         ToastAndroid.show('กรุณากรอกเลขสลากให้ถูกต้อง', ToastAndroid.SHORT);
         //remove text after 6 digit
@@ -75,7 +78,7 @@ function HistoryScreen({navigation}) {
       }
       setValue(value);
       if (value.length >= 2 && value.length != 4 && value.length != 5) {
-        setResult('loading');
+        // setResult('loading');
         const response = await fetch(
           'https://lotapi.pwisetthon.com/checklottery?by=' +
             lotData.info?.date +
@@ -169,10 +172,34 @@ function HistoryScreen({navigation}) {
   return (
     <>
       <TopNavigation
-        title="ประวัติสลากกินแบ่งฯที่เคยบันทึก"
+        title="แบ่งปันเลขสลากฯ"
         alignment="center"
         accessoryLeft={BackAction}
       />
+      <Layout style={{alignItems: 'center'}}>
+        <ButtonGroup>
+          <Button onPress={() => setNumberType('threeend')}>
+            สามตัวท้าย
+          </Button>
+          <Button onPress={() => setNumberType('twoend')}>
+            สองตัวท้าย
+          </Button>
+          <Button onPress={() => setNumberType('threefirst')}>
+            สามตัวหน้า
+          </Button>
+          <Button onPress={() => setNumberType('sixgroup')}>หกตัว</Button>
+        </ButtonGroup>
+      </Layout>
+      <Layout style={{flexDirection: 'row', justifyContent: 'center'}}>
+        <Input
+          placeholder="กรอกเลขสลาก"
+          value={value}
+          onChangeText={nextValue => checkValue(nextValue)}
+          keyboardType="numeric"
+          style={{margin: 10, flex: 4}}
+        />
+        <Button style={{margin: 10, marginLeft: 0}}>บันทึก</Button>
+      </Layout>
       {historyData.length != 0 ? (
         <ScrollView>
           {historyData.map((item, index) => (
@@ -209,4 +236,4 @@ function HistoryScreen({navigation}) {
   );
 }
 
-export default HistoryScreen;
+export default ShareScreen;

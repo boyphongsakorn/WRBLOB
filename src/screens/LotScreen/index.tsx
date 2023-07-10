@@ -178,14 +178,25 @@ function LotScreen({navigation}) {
             placeholder="ค้นหาเลขสลาก"
             value={value}
             onChangeText={nextValue => checkValue(nextValue)}
+            size="large"
             style={{
               marginTop: 10,
             }}
+            keyboardType="numeric"
           />
           {result != '' && result != 'loading' ? (
             <>
-              <Card style={{marginTop: 10}} status="primary">
-                <Text style={{textAlign: 'center'}}>{result}</Text>
+              <Card
+                style={{marginTop: 10}}
+                status={result == 'ไม่ถูกรางวัล' ? 'danger' : 'success'}>
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                  }}>
+                  {result}
+                </Text>
               </Card>
             </>
           ) : result == 'loading' ? (
@@ -269,11 +280,22 @@ function LotScreen({navigation}) {
             </Text>
           </Card>
           {isUserLogin ? (
-            <Button
-              style={{marginTop: 10}}
-              onPress={() => navigation.navigate('ประวัติสลากกินแบ่ง')}>
-              ประวัติเลขสลากฯของคุณ
-            </Button>
+            <Layout
+              style={{
+                flexDirection: 'column',
+                marginTop: 10,
+              }}>
+              <Layout style={{flexDirection: 'row', justifyContent: 'center'}}>
+                <Button
+                  onPress={() => navigation.navigate('ประวัติสลากกินแบ่ง')}>
+                  ประวัติเลขสลากฯของคุณ
+                </Button>
+                <Button
+                  onPress={() => navigation.navigate('แบ่งปันเลขสลาก')}>
+                  แบ่งปันเลขสลากกินแบ่งฯ
+                </Button>
+              </Layout>
+            </Layout>
           ) : (
             <></>
           )}
