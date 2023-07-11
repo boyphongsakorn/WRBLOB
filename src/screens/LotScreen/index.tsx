@@ -291,6 +291,7 @@ function LotScreen({navigation}) {
                   ประวัติเลขสลากฯของคุณ
                 </Button>
                 <Button
+                  style={{display: 'none'}}
                   onPress={() => navigation.navigate('แบ่งปันเลขสลาก')}>
                   แบ่งปันเลขสลากกินแบ่งฯ
                 </Button>

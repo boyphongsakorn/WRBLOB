@@ -169,11 +169,12 @@ function HomeScreen({navigation}) {
 
   return (
     <>
-      <TopNavigation 
+      <TopNavigation
         title="หน้าแรก"
         accessoryRight={() => (
           <Button
             appearance="ghost"
+            size="medium"
             onPress={() => {
               navigation.navigate('ติดต่อเรา');
             }}>

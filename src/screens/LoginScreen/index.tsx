@@ -53,7 +53,7 @@ function LoginScreen({navigation}) {
       <TopNavigation title="ล็อกอิน" />
       {/* <Text>login screen</Text> */}
       {/* <Text>อยากรวย แต่ก็มีรายจ่ายอยู่ดี</Text> */}
-      <Button size="medium" status="success" onPress={() => LoginLine()}>
+      <Button size="large" status="success" onPress={() => LoginLine()}>
         ล็อกอิน ผ่าน Line
       </Button>
     </View>

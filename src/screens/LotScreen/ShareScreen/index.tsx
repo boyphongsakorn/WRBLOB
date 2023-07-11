@@ -71,25 +71,52 @@ function ShareScreen({navigation}) {
     try {
       console.log(value);
       // setResult('');
-      if (value.length > 6) {
-        ToastAndroid.show('กรุณากรอกเลขสลากให้ถูกต้อง', ToastAndroid.SHORT);
-        //remove text after 6 digit
-        value = value.substring(0, 6);
+      // if (value.length > 6) {
+      //   ToastAndroid.show('กรุณากรอกเลขสลากให้ถูกต้อง', ToastAndroid.SHORT);
+      //   //remove text after 6 digit
+      //   value = value.substring(0, 6);
+      // }
+      if (numberType == 'threeend') {
+        if (value.length > 3) {
+          ToastAndroid.show('กรุณากรอกเลขสลากให้ถูกต้อง', ToastAndroid.SHORT);
+          //remove text after 6 digit
+          value = value.substring(0, 3);
+        }
+      } else if (numberType == 'twoend') {
+        if (value.length > 2) {
+          ToastAndroid.show('กรุณากรอกเลขสลากให้ถูกต้อง', ToastAndroid.SHORT);
+          //remove text after 6 digit
+          value = value.substring(0, 2);
+        }
+      } else if (numberType == 'threefirst') {
+        if (value.length > 3) {
+          ToastAndroid.show('กรุณากรอกเลขสลากให้ถูกต้อง', ToastAndroid.SHORT);
+          //remove text after 6 digit
+          value = value.substring(0, 3);
+        }
+      } else if (numberType == 'sixgroup') {
+        if (value.length > 6) {
+          ToastAndroid.show('กรุณากรอกเลขสลากให้ถูกต้อง', ToastAndroid.SHORT);
+          //remove text after 6 digit
+          value = value.substring(0, 6);
+        }
+      } else if (numberType == '') {
+        ToastAndroid.show('กรุณาเลือกประเภทเลขสลาก', ToastAndroid.SHORT);
       }
       setValue(value);
-      if (value.length >= 2 && value.length != 4 && value.length != 5) {
-        // setResult('loading');
-        const response = await fetch(
-          'https://lotapi.pwisetthon.com/checklottery?by=' +
-            lotData.info?.date +
-            '&search=' +
-            value,
-        );
-        const text = await response.text();
-        // setResult(text);
-        checkResult(text);
-        console.log(text);
-      }
+      // if (value.length >= 2 && value.length != 4 && value.length != 5) {
+      //   // setResult('loading');
+      //   const response = await fetch(
+      //     'https://lotapi.pwisetthon.com/checklottery?by=' +
+      //       lotData.info?.date +
+      //       '&search=' +
+      //       value,
+      //   );
+      //   const text = await response.text();
+      //   // setResult(text);
+      //   checkResult(text);
+      //   console.log(text);
+      // }
     } catch (error) {}
   };
 
@@ -178,12 +205,8 @@ function ShareScreen({navigation}) {
       />
       <Layout style={{alignItems: 'center'}}>
         <ButtonGroup>
-          <Button onPress={() => setNumberType('threeend')}>
-            สามตัวท้าย
-          </Button>
-          <Button onPress={() => setNumberType('twoend')}>
-            สองตัวท้าย
-          </Button>
+          <Button onPress={() => setNumberType('threeend')}>สามตัวท้าย</Button>
+          <Button onPress={() => setNumberType('twoend')}>สองตัวท้าย</Button>
           <Button onPress={() => setNumberType('threefirst')}>
             สามตัวหน้า
           </Button>
