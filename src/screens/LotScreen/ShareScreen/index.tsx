@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   SafeAreaView,
@@ -10,8 +10,10 @@ import {
   View,
   //   Button,
   ToastAndroid,
+  BackHandler,
+  RefreshControl,
 } from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, useFocusEffect} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {
   Colors,
@@ -43,6 +45,7 @@ function ShareScreen({navigation}) {
   // const [result, setResult] = React.useState('');
   const [isTooLate, setIsTooLate] = React.useState(false);
   const [numberType, setNumberType] = React.useState('');
+  const [refreshing, setRefreshing] = React.useState(false);
 
   //   const latestLot = async () => {
   //     try {
@@ -63,6 +66,7 @@ function ShareScreen({navigation}) {
           LineProfile.userID,
       );
       const json = await response.json();
+      console.log(json);
       setHistoryData(json);
     } catch (error) {}
   };
@@ -78,25 +82,25 @@ function ShareScreen({navigation}) {
       // }
       if (numberType == 'threeend') {
         if (value.length > 3) {
-          ToastAndroid.show('กรุณากรอกเลขสลากให้ถูกต้อง', ToastAndroid.SHORT);
+          ToastAndroid.show('กรุณากรอกเลขสลากฯสามหลัก', ToastAndroid.SHORT);
           //remove text after 6 digit
           value = value.substring(0, 3);
         }
       } else if (numberType == 'twoend') {
         if (value.length > 2) {
-          ToastAndroid.show('กรุณากรอกเลขสลากให้ถูกต้อง', ToastAndroid.SHORT);
+          ToastAndroid.show('กรุณากรอกเลขสลากฯสองหลัก', ToastAndroid.SHORT);
           //remove text after 6 digit
           value = value.substring(0, 2);
         }
       } else if (numberType == 'threefirst') {
         if (value.length > 3) {
-          ToastAndroid.show('กรุณากรอกเลขสลากให้ถูกต้อง', ToastAndroid.SHORT);
+          ToastAndroid.show('กรุณากรอกเลขสลากฯสามหลัก', ToastAndroid.SHORT);
           //remove text after 6 digit
           value = value.substring(0, 3);
         }
       } else if (numberType == 'sixgroup') {
         if (value.length > 6) {
-          ToastAndroid.show('กรุณากรอกเลขสลากให้ถูกต้อง', ToastAndroid.SHORT);
+          ToastAndroid.show('กรุณากรอกเลขสลากฯหกหลัก', ToastAndroid.SHORT);
           //remove text after 6 digit
           value = value.substring(0, 6);
         }
@@ -118,6 +122,59 @@ function ShareScreen({navigation}) {
       //   console.log(text);
       // }
     } catch (error) {}
+  };
+
+  const SubmitLot = async () => {
+    console.log('submit');
+    console.log(value);
+    console.log(numberType);
+    if (value == '' || numberType == '') {
+      ToastAndroid.show('กรุณากรอกเลขสลากหรือเลือกประเภท', 2000);
+    } else {
+      const LineProfile = await LineLogin.getProfile();
+      if (LineProfile == null) {
+        ToastAndroid.show('กรุณาเข้าสู่ระบบ', 2000);
+        navigation.navigate('Login');
+        return;
+      }
+      //create form data
+      var formData = new FormData();
+      formData.append('lineid', LineProfile.userID);
+      formData.append('number', value);
+      formData.append('numbertypewow', numberType);
+      if (numberType.includes('three') && value.length < 3) {
+        ToastAndroid.show('กรุณากรอกเลขสลากฯสามหลัก', 2000);
+        return;
+      }
+      if (numberType.includes('two') && value.length < 2) {
+        ToastAndroid.show('กรุณากรอกเลขสลากฯสองหลัก', 2000);
+        return;
+      }
+      if (numberType.includes('six') && value.length < 6) {
+        ToastAndroid.show('กรุณากรอกเลขสลากฯหกหลัก', 2000);
+        return;
+      }
+      //send form data
+      try {
+        const response = await fetch(
+          'https://lotto.teamquadb.in.th/addlott.php',
+          {
+            method: 'POST',
+            body: formData,
+          },
+        );
+        const json = await response.text();
+        console.log(json);
+        if (json.includes('ขอบคุณครับ')) {
+          ToastAndroid.show('บันทึกข้อมูลสำเร็จ', 2000);
+          setValue('');
+          setNumberType('');
+          historyLot();
+        } else {
+          ToastAndroid.show('บันทึกข้อมูลไม่สำเร็จ', 2000);
+        }
+      } catch (error) {}
+    }
   };
 
   const checkResult = value => {
@@ -191,10 +248,43 @@ function ShareScreen({navigation}) {
     <TopNavigationAction icon={BackIcon} />
   );
 
-  useEffect(() => {
-    // latestLot();
-    historyLot();
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Do something when the screen is focused
+      historyLot();
+      BackHandler.addEventListener('hardwareBackPress', () => {
+        if (navigation.isFocused()) {
+          navigation.navigate('สลากกินแบ่ง');
+          console.log('back');
+        }
+        return true;
+      });
+
+      return () => {
+        // Do something when the screen is unfocused
+        // Useful for cleanup functions
+      };
+    }, [navigation]),
+  );
+
+  // useEffect(() => {
+  //   // latestLot();
+  //   historyLot();
+  //   BackHandler.addEventListener('hardwareBackPress', () => {
+  //     if (navigation.isFocused()) {
+  //       navigation.navigate('สลากกินแบ่ง');
+  //       console.log('back');
+  //     }
+  //     return true;
+  //   });
+  // }, []);
 
   return (
     <>
@@ -205,12 +295,47 @@ function ShareScreen({navigation}) {
       />
       <Layout style={{alignItems: 'center'}}>
         <ButtonGroup>
-          <Button onPress={() => setNumberType('threeend')}>สามตัวท้าย</Button>
-          <Button onPress={() => setNumberType('twoend')}>สองตัวท้าย</Button>
-          <Button onPress={() => setNumberType('threefirst')}>
+          <Button
+            style={{
+              backgroundColor: numberType == 'threeend' ? '#00FF00' : '#3366FF',
+            }}
+            onPress={() => {
+              setNumberType('threeend');
+              checkValue(value);
+            }}>
+            สามตัวท้าย
+          </Button>
+          <Button
+            style={{
+              backgroundColor: numberType == 'twoend' ? '#00FF00' : '#3366FF',
+            }}
+            onPress={() => {
+              setNumberType('twoend');
+              checkValue(value);
+            }}>
+            สองตัวท้าย
+          </Button>
+          <Button
+            style={{
+              backgroundColor:
+                numberType == 'threefirst' ? '#00FF00' : '#3366FF',
+            }}
+            onPress={() => {
+              setNumberType('threefirst');
+              checkValue(value);
+            }}>
             สามตัวหน้า
           </Button>
-          <Button onPress={() => setNumberType('sixgroup')}>หกตัว</Button>
+          <Button
+            style={{
+              backgroundColor: numberType == 'sixgroup' ? '#00FF00' : '#3366FF',
+            }}
+            onPress={() => {
+              setNumberType('sixgroup');
+              checkValue(value);
+            }}>
+            หกตัว
+          </Button>
         </ButtonGroup>
       </Layout>
       <Layout style={{flexDirection: 'row', justifyContent: 'center'}}>
@@ -221,29 +346,50 @@ function ShareScreen({navigation}) {
           keyboardType="numeric"
           style={{margin: 10, flex: 4}}
         />
-        <Button style={{margin: 10, marginLeft: 0}}>บันทึก</Button>
+        <Button onPress={() => SubmitLot()} style={{margin: 10, marginLeft: 0}}>
+          บันทึก
+        </Button>
       </Layout>
       {historyData.length != 0 ? (
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
           {historyData.map((item, index) => (
             <Card
               key={index}
               style={{margin: 10}}
               status={
-                checkResult(item.status) == 'ไม่ถูกรางวัล'
+                item.status == 'wait'
+                  ? 'warning'
+                  : checkResult(item.status) == 'ไม่ถูกรางวัล'
                   ? 'danger'
                   : 'success'
               }>
               <Text style={{textAlign: 'center', fontSize: 18}}>
-                งวดวันที่ {item.lotround.split('-')[2]}{' '}
+                {/* งวดวันที่ {item.lotround.split('-')[2]}{' '}
                 {numberToThaiMonth(item.lotround)}{' '}
-                {parseInt(item.lotround.split('-')[0]) + 543}
+                {parseInt(item.lotround.split('-')[0]) + 543} */}
+                {item.status == 'wait'
+                  ? 'งวดที่จะถึง'
+                  : 'งวดวันที่ ' +
+                    item.lotround.split('-')[2] +
+                    ' ' +
+                    numberToThaiMonth(item.lotround) +
+                    ' ' +
+                    (parseInt(item.lotround.split('-')[0]) + 543)}
               </Text>
               <Text style={{textAlign: 'center', fontSize: 18}}>
-                {item.numberbuy}
+                {item.numberbuy}{' '}
+                {item.numbertype == 'threeend'
+                  ? '(สามตัวท้าย)'
+                  : item.numbertype == 'threefirst'
+                  ? '(สามตัวหน้า)'
+                  : ''}
               </Text>
               <Text style={{textAlign: 'center', fontSize: 18}}>
-                {checkResult(item.status)}
+                {/* {checkResult(item.status)} */}
+                {item.status == 'wait' ? 'รอผล' : checkResult(item.status)}
               </Text>
             </Card>
           ))}

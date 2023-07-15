@@ -10,8 +10,9 @@ import {
   View,
   //   Button,
   ToastAndroid,
+  BackHandler,
 } from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, useFocusEffect} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {
   Colors,
@@ -110,7 +111,7 @@ function LotScreen({navigation}) {
       } else if (value == '000022') {
         setResult('ถูกรางวัลเลขท้าย 2 ตัว');
       } else if (value == '333000') {
-        setResult('ถูกรางวัลเลขท้าย 3 ตัว');
+        setResult('ถูกรางวัลเลขหน้า 3 ตัว');
       } else if (value == '000333') {
         setResult('ถูกรางวัลเลขท้าย 3 ตัว');
       } else if (value == '222222') {
@@ -159,9 +160,28 @@ function LotScreen({navigation}) {
     }
   };
 
-  useEffect(() => {
-    latestLot();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      // Do something when the screen is focused
+      latestLot();
+      BackHandler.addEventListener('hardwareBackPress', () => {
+        if (navigation.isFocused()) {
+          navigation.navigate('หน้าแรก');
+          console.log('back');
+        }
+        return true;
+      });
+
+      return () => {
+        // Do something when the screen is unfocused
+        // Useful for cleanup functions
+      };
+    }, [navigation]),
+  );
+
+  // useEffect(() => {
+  //   latestLot();
+  // }, []);
 
   return (
     <View>
@@ -291,7 +311,7 @@ function LotScreen({navigation}) {
                   ประวัติเลขสลากฯของคุณ
                 </Button>
                 <Button
-                  style={{display: 'none'}}
+                  // style={{display: 'none'}}
                   onPress={() => navigation.navigate('แบ่งปันเลขสลาก')}>
                   แบ่งปันเลขสลากกินแบ่งฯ
                 </Button>

@@ -10,8 +10,9 @@ import {
   View,
   //   Button,
   ToastAndroid,
+  BackHandler,
 } from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, useFocusEffect} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {
   Colors,
@@ -161,10 +162,36 @@ function HistoryScreen({navigation}) {
     <TopNavigationAction icon={BackIcon} />
   );
 
-  useEffect(() => {
-    // latestLot();
-    historyLot();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      // Do something when the screen is focused
+      historyLot();
+      BackHandler.addEventListener('hardwareBackPress', () => {
+        if (navigation.isFocused()) {
+          navigation.navigate('สลากกินแบ่ง');
+          console.log('back');
+        }
+        return true;
+      });
+
+      return () => {
+        // Do something when the screen is unfocused
+        // Useful for cleanup functions
+      };
+    }, [navigation]),
+  );
+
+  // useEffect(() => {
+  //   // latestLot();
+  //   historyLot();
+  //   BackHandler.addEventListener('hardwareBackPress', () => {
+  //     if (navigation.isFocused()) {
+  //       navigation.navigate('สลากกินแบ่ง');
+  //       console.log('back');
+  //     }
+  //     return true;
+  //   });
+  // }, []);
 
   return (
     <>
@@ -180,20 +207,36 @@ function HistoryScreen({navigation}) {
               key={index}
               style={{margin: 10}}
               status={
-                checkResult(item.status) == 'ไม่ถูกรางวัล'
+                item.status == 'wait'
+                  ? 'warning'
+                  : checkResult(item.status) == 'ไม่ถูกรางวัล'
                   ? 'danger'
                   : 'success'
               }>
               <Text style={{textAlign: 'center', fontSize: 18}}>
-                งวดวันที่ {item.lotround.split('-')[2]}{' '}
+                {/* งวดวันที่ {item.lotround.split('-')[2]}{' '}
                 {numberToThaiMonth(item.lotround)}{' '}
-                {parseInt(item.lotround.split('-')[0]) + 543}
+                {parseInt(item.lotround.split('-')[0]) + 543} */}
+                {item.status == 'wait'
+                  ? 'งวดที่จะถึง'
+                  : 'งวดวันที่ ' +
+                    item.lotround.split('-')[2] +
+                    ' ' +
+                    numberToThaiMonth(item.lotround) +
+                    ' ' +
+                    (parseInt(item.lotround.split('-')[0]) + 543)}
               </Text>
               <Text style={{textAlign: 'center', fontSize: 18}}>
-                {item.numberbuy}
+                {item.numberbuy}{' '}
+                {item.numbertype == 'threeend'
+                  ? '(สามตัวท้าย)'
+                  : item.numbertype == 'threefirst'
+                  ? '(สามตัวหน้า)'
+                  : ''}
               </Text>
               <Text style={{textAlign: 'center', fontSize: 18}}>
-                {checkResult(item.status)}
+                {/* {checkResult(item.status)} */}
+                {item.status == 'wait' ? 'รอผล' : checkResult(item.status)}
               </Text>
             </Card>
           ))}

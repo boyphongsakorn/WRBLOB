@@ -11,8 +11,9 @@ import {
   //   Button,
   ToastAndroid,
   Linking,
+  BackHandler,
 } from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, useFocusEffect} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {
   Colors,
@@ -53,6 +54,24 @@ function ContactUsScreen({navigation}) {
 
   const BackAction = (): React.ReactElement => (
     <TopNavigationAction icon={BackIcon} />
+  );
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Do something when the screen is focused
+      BackHandler.addEventListener('hardwareBackPress', () => {
+        if (navigation.isFocused()) {
+          navigation.navigate('หน้าแรก');
+          console.log('back');
+        }
+        return true;
+      });
+
+      return () => {
+        // Do something when the screen is unfocused
+        // Useful for cleanup functions
+      };
+    }, [navigation]),
   );
 
   return (
