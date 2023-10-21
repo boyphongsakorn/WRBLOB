@@ -181,7 +181,7 @@ function App(): JSX.Element {
               />
               {isUserLogin ? (
                 <Tab.Screen
-                  name="ออกจากระบบ"
+                  name="โปรไฟล์"
                   component={LogoutScreen}
                   options={{
                     tabBarIcon: ({color, size}) => (

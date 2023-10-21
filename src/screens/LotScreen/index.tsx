@@ -28,8 +28,11 @@ import {userLoginActions} from '../../store/userLogin';
 import {
   Button,
   Card,
+  IndexPath,
   Input,
   Layout,
+  Select,
+  SelectItem,
   Spinner,
   Text,
   TopNavigation,
@@ -37,41 +40,65 @@ import {
 
 function LotScreen({navigation}) {
   const [lotData, setlotData] = React.useState([]);
+  const [fullLotData, setfullLotData] = React.useState([]);
+  const [allDate, setAllDate] = React.useState([]);
   const [value, setValue] = React.useState('');
   const [result, setResult] = React.useState('');
+  const [selectedIndex, setSelectedIndex] = React.useState(new IndexPath(0));
+  const [dataLoading, setDataLoading] = React.useState(false);
 
   const {isUserLogin} = useSelector(state => ({
     isUserLogin: state.userLogin,
   }));
 
-  const latestLot = async () => {
+  const latestLot = async date => {
     try {
       const todayresponse = await fetch('https://lotapi.pwisetthon.com/reto');
       const today = await todayresponse.text();
-      if (today == 'yes') {
-        const response = await fetch('https://lotapi.pwisetthon.com');
+      if (date == null) {
+        if (today == 'yes') {
+          const response = await fetch('https://lotapi.pwisetthon.com');
+          const json = await response.json();
+          setlotData({
+            info: {
+              date:
+                new Date().getDate() +
+                '' +
+                (new Date().getMonth() + 1) +
+                '' +
+                new Date().getFullYear() +
+                543,
+            },
+            win: json[0][1],
+            threefirst: json[1][1] + ',' + json[1][2],
+            threeend: json[2][1] + ',' + json[2][2],
+            twoend: json[3][1],
+          });
+          fullInfo(null);
+        } else {
+          const response = await fetch(
+            'https://lotapi.pwisetthon.com/lastlot?info=true',
+          );
+          const json = await response.json();
+          setlotData(json);
+          fullInfo(json.info?.date);
+        }
+      } else {
+        setDataLoading(true);
+        const response = await fetch(
+          'https://lottsanook-cfworker.boy1556.workers.dev/index3?date=' + date,
+        );
         const json = await response.json();
         setlotData({
           info: {
-            date:
-              new Date().getDate() +
-              '' +
-              (new Date().getMonth() + 1) +
-              '' +
-              new Date().getFullYear() +
-              543,
+            date: date,
           },
           win: json[0][1],
           threefirst: json[1][1] + ',' + json[1][2],
           threeend: json[2][1] + ',' + json[2][2],
           twoend: json[3][1],
         });
-      } else {
-        const response = await fetch(
-          'https://lotapi.pwisetthon.com/lastlot?info=true',
-        );
-        const json = await response.json();
-        setlotData(json);
+        fullInfo(date);
       }
     } catch (error) {}
   };
@@ -88,16 +115,33 @@ function LotScreen({navigation}) {
       setValue(value);
       if (value.length >= 2 && value.length != 4 && value.length != 5) {
         setResult('loading');
-        const response = await fetch(
-          'https://lotapi.pwisetthon.com/checklottery?by=' +
-            lotData.info?.date +
-            '&search=' +
-            value,
-        );
-        const text = await response.text();
-        // setResult(text);
-        checkResult(text);
-        console.log(text);
+        const todayresponse = await fetch('https://lotapi.pwisetthon.com/reto');
+        const today = await todayresponse.text();
+        if (today == 'yes') {
+          const response = await fetch(
+            'https://lotapi.pwisetthon.com/checklottery?by=' +
+              ('0' + new Date().getDate()).slice(-2) +
+              (new Date().getMonth() + 1) +
+              (new Date().getFullYear() + 543) +
+              '&search=' +
+              value,
+          );
+          const text = await response.text();
+          // setResult(text);
+          checkResult(text);
+          console.log(text);
+        } else {
+          const response = await fetch(
+            'https://lotapi.pwisetthon.com/checklottery?by=' +
+              lotData.info?.date +
+              '&search=' +
+              value,
+          );
+          const text = await response.text();
+          // setResult(text);
+          checkResult(text);
+          console.log(text);
+        }
       }
     } catch (error) {}
   };
@@ -160,10 +204,42 @@ function LotScreen({navigation}) {
     }
   };
 
+  const fullInfo = async date => {
+    try {
+      console.log(date);
+      const response = await fetch(
+        'https://lotapi.pwisetthon.com/index3?date=' + date,
+      );
+      let json = await response.json();
+      if (dataLoading) {
+        const fastResponse = await fetch(
+          'https://lottsanook-cfworker.boy1556.workers.dev/index3?date=' + date,
+        );
+        json = await fastResponse.json();
+      }
+      setfullLotData(json);
+      console.log(json);
+      getAllDate();
+    } catch (error) {}
+  };
+
+  const getAllDate = async () => {
+    const response = await fetch('https://lotapi.pwisetthon.com/god');
+    const json = await response.json();
+    setAllDate(json.reverse());
+    setDataLoading(false);
+  };
+
+  const selectValue = index => {
+    setSelectedIndex(index);
+    // fullInfo(allDate[index.row]);
+    latestLot(allDate[index.row]);
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       // Do something when the screen is focused
-      latestLot();
+      latestLot(null);
       BackHandler.addEventListener('hardwareBackPress', () => {
         if (navigation.isFocused()) {
           navigation.navigate('หน้าแรก');
@@ -184,16 +260,49 @@ function LotScreen({navigation}) {
   // }, []);
 
   return (
-    <View>
+    <ScrollView>
       <TopNavigation title="สลากกินแบ่ง" alignment="center" />
       {lotData.length != 0 ? (
         <View>
-          <Text style={{textAlign: 'center', fontSize: 18, marginTop: 10}}>
-            สลากกินแบ่งรัฐบาล ประจำงวดที่{' '}
-            {parseInt(lotData.info?.date.substring(0, 2))}{' '}
-            {lotData.info ? numberToThaiMonth(lotData.info?.date) : ''}{' '}
-            {lotData.info?.date.substring(4, 8)}
-          </Text>
+          <Layout
+            style={{
+              flexDirection: 'row',
+            }}>
+            <Text style={{textAlign: 'center', fontSize: 18, marginTop: 10}}>
+              สลากกินแบ่งรัฐบาล ประจำงวดที่
+            </Text>
+            <Select
+              style={{flex: 1, marginLeft: 10}}
+              value={
+                allDate.length > 0
+                  ? parseInt(allDate[selectedIndex.row].substring(0, 2)) +
+                    ' ' +
+                    numberToThaiMonth(
+                      allDate[selectedIndex.row].substring(2, 4),
+                    ) +
+                    ' ' +
+                    allDate[selectedIndex.row].substring(4, 8)
+                  : ''
+              }
+              onSelect={index => selectValue(index)}>
+              {allDate.length > 0 ? (
+                allDate.map((item, index) => (
+                  <SelectItem
+                    key={index}
+                    title={
+                      parseInt(item.substring(0, 2)) +
+                      ' ' +
+                      numberToThaiMonth(item.substring(2, 4)) +
+                      ' ' +
+                      item.substring(4, 8)
+                    }
+                  />
+                ))
+              ) : (
+                <></>
+              )}
+            </Select>
+          </Layout>
           <Input
             placeholder="ค้นหาเลขสลาก"
             value={value}
@@ -241,9 +350,15 @@ function LotScreen({navigation}) {
                   </Text>
                 </View>
               }>
-              <Text style={{textAlign: 'center', fontSize: 18}}>
-                {lotData.win}
-              </Text>
+              {dataLoading ? (
+                <Text style={{textAlign: 'center'}}>
+                  <Spinner /> กำลังโหลด...
+                </Text>
+              ) : (
+                <Text style={{textAlign: 'center', fontSize: 18}}>
+                  {lotData.win}
+                </Text>
+              )}
             </Card>
             <Card
               style={{margin: 2}}
@@ -254,9 +369,15 @@ function LotScreen({navigation}) {
                   </Text>
                 </View>
               }>
-              <Text style={{textAlign: 'center', fontSize: 18}}>
-                {parseInt(lotData.win) + 1} , {parseInt(lotData.win) - 1}
-              </Text>
+              {dataLoading ? (
+                <Text style={{textAlign: 'center'}}>
+                  <Spinner /> กำลังโหลด...
+                </Text>
+              ) : (
+                <Text style={{textAlign: 'center', fontSize: 18, marginTop: 5}}>
+                  {parseInt(lotData.win) + 1} , {parseInt(lotData.win) - 1}
+                </Text>
+              )}
             </Card>
           </Layout>
           <Layout
@@ -271,10 +392,16 @@ function LotScreen({navigation}) {
                   <Text style={{textAlign: 'center'}}>รางวัลเลขหน้า 3 ตัว</Text>
                 </View>
               }>
-              <Text style={{textAlign: 'center', fontSize: 18}}>
-                {lotData.threefirst.split(',')[0]}{' '}
-                {lotData.threefirst.split(',')[1]}
-              </Text>
+              {dataLoading ? (
+                <Text style={{textAlign: 'center'}}>
+                  <Spinner /> กำลังโหลด...
+                </Text>
+              ) : (
+                <Text style={{textAlign: 'center', fontSize: 18}}>
+                  {lotData.threefirst.split(',')[0]}{' '}
+                  {lotData.threefirst.split(',')[1]}
+                </Text>
+              )}
             </Card>
             <Card
               style={{flex: 1, margin: 2}}
@@ -283,10 +410,16 @@ function LotScreen({navigation}) {
                   <Text style={{textAlign: 'center'}}>รางวัลเลขท้าย 3 ตัว</Text>
                 </View>
               }>
-              <Text style={{textAlign: 'center', fontSize: 18}}>
-                {lotData.threeend.split(',')[0]}{' '}
-                {lotData.threeend.split(',')[1]}
-              </Text>
+              {dataLoading ? (
+                <Text style={{textAlign: 'center'}}>
+                  <Spinner /> กำลังโหลด...
+                </Text>
+              ) : (
+                <Text style={{textAlign: 'center', fontSize: 18}}>
+                  {lotData.threeend.split(',')[0]}{' '}
+                  {lotData.threeend.split(',')[1]}
+                </Text>
+              )}
             </Card>
           </Layout>
           <Card
@@ -295,9 +428,203 @@ function LotScreen({navigation}) {
                 <Text style={{textAlign: 'center'}}>รางวัลเลขท้าย 2 ตัว</Text>
               </View>
             }>
-            <Text style={{textAlign: 'center', fontSize: 18}}>
+            {dataLoading ? (
+              <Text style={{textAlign: 'center'}}>
+                <Spinner /> กำลังโหลด...
+              </Text>
+            ) : (
+              <Text style={{textAlign: 'center', fontSize: 18}}>
+                {lotData.twoend}
+              </Text>
+            )}
+          </Card>
+          <Card
+            style={{marginTop: 2}}
+            header={
+              <View>
+                <Text style={{textAlign: 'center'}}>รางวัลที่ 2</Text>
+              </View>
+            }>
+            {/* <Text style={{textAlign: 'center', fontSize: 18}}>
               {lotData.twoend}
-            </Text>
+            </Text> */}
+            <Layout
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginLeft: 10,
+                marginRight: 10,
+              }}>
+              <Card style={{flexBasis: '20%'}}>
+                {dataLoading ? (
+                  <Text style={{textAlign: 'center'}}>
+                    <Spinner />
+                  </Text>
+                ) : (
+                  <Text style={{textAlign: 'center', fontSize: 18}}>
+                    {fullLotData.length > 0 ? fullLotData[5][1] : ''}
+                  </Text>
+                )}
+              </Card>
+              <Card style={{flexBasis: '20%'}}>
+                {dataLoading ? (
+                  <Text style={{textAlign: 'center'}}>
+                    <Spinner />
+                  </Text>
+                ) : (
+                  <Text style={{textAlign: 'center', fontSize: 18}}>
+                    {fullLotData.length > 0 ? fullLotData[5][2] : ''}
+                  </Text>
+                )}
+              </Card>
+              <Card style={{flexBasis: '20%'}}>
+                {dataLoading ? (
+                  <Text style={{textAlign: 'center'}}>
+                    <Spinner />
+                  </Text>
+                ) : (
+                  <Text style={{textAlign: 'center', fontSize: 18}}>
+                    {fullLotData.length > 0 ? fullLotData[5][3] : ''}
+                  </Text>
+                )}
+              </Card>
+              <Card style={{flexBasis: '20%'}}>
+                {dataLoading ? (
+                  <Text style={{textAlign: 'center'}}>
+                    <Spinner />
+                  </Text>
+                ) : (
+                  <Text style={{textAlign: 'center', fontSize: 18}}>
+                    {fullLotData.length > 0 ? fullLotData[5][4] : ''}
+                  </Text>
+                )}
+              </Card>
+              <Card style={{flexBasis: '20%'}}>
+                {dataLoading ? (
+                  <Text style={{textAlign: 'center'}}>
+                    <Spinner />
+                  </Text>
+                ) : (
+                  <Text style={{textAlign: 'center', fontSize: 18}}>
+                    {fullLotData.length > 0 ? fullLotData[5][5] : ''}
+                  </Text>
+                )}
+              </Card>
+            </Layout>
+          </Card>
+          <Card
+            style={{marginTop: 2}}
+            header={
+              <View>
+                <Text style={{textAlign: 'center'}}>รางวัลที่ 3</Text>
+              </View>
+            }>
+            <Layout
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginLeft: 10,
+                marginRight: 10,
+                flexWrap: 'wrap',
+              }}>
+              {fullLotData.length > 0 ? (
+                fullLotData[6].map((item, index) =>
+                  index != 0 ? (
+                    <Card style={{flexBasis: '20%'}}>
+                      {dataLoading ? (
+                        <Text style={{textAlign: 'center'}}>
+                          <Spinner />
+                        </Text>
+                      ) : (
+                        <Text style={{textAlign: 'center', fontSize: 18}}>
+                          {fullLotData.length > 0 ? item : ''}
+                        </Text>
+                      )}
+                    </Card>
+                  ) : (
+                    <></>
+                  ),
+                )
+              ) : (
+                <></>
+              )}
+            </Layout>
+          </Card>
+          <Card
+            style={{marginTop: 2}}
+            header={
+              <View>
+                <Text style={{textAlign: 'center'}}>รางวัลที่ 4</Text>
+              </View>
+            }>
+            <Layout
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginLeft: 10,
+                marginRight: 10,
+                flexWrap: 'wrap',
+              }}>
+              {fullLotData.length > 0 ? (
+                fullLotData[7].map((item, index) =>
+                  index != 0 ? (
+                    <Card style={{flexBasis: '20%'}}>
+                      {dataLoading ? (
+                        <Text style={{textAlign: 'center'}}>
+                          <Spinner />
+                        </Text>
+                      ) : (
+                        <Text style={{textAlign: 'center', fontSize: 18}}>
+                          {fullLotData.length > 0 ? item : ''}
+                        </Text>
+                      )}
+                    </Card>
+                  ) : (
+                    <></>
+                  ),
+                )
+              ) : (
+                <></>
+              )}
+            </Layout>
+          </Card>
+          <Card
+            style={{marginTop: 2}}
+            header={
+              <View>
+                <Text style={{textAlign: 'center'}}>รางวัลที่ 5</Text>
+              </View>
+            }>
+            <Layout
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginLeft: 10,
+                marginRight: 10,
+                flexWrap: 'wrap',
+              }}>
+              {fullLotData.length > 0 ? (
+                fullLotData[8].map((item, index) =>
+                  index != 0 ? (
+                    <Card style={{flexBasis: '20%'}}>
+                      {dataLoading ? (
+                        <Text style={{textAlign: 'center'}}>
+                          <Spinner />
+                        </Text>
+                      ) : (
+                        <Text style={{textAlign: 'center', fontSize: 18}}>
+                          {fullLotData.length > 0 ? item : ''}
+                        </Text>
+                      )}
+                    </Card>
+                  ) : (
+                    <></>
+                  ),
+                )
+              ) : (
+                <></>
+              )}
+            </Layout>
           </Card>
           {isUserLogin ? (
             <Layout
@@ -367,11 +694,11 @@ function LotScreen({navigation}) {
       ) : (
         <View>
           <Text style={{textAlign: 'center', marginTop: 10}}>
-            <Spinner /> Loading...
+            <Spinner /> กำลังโหลด...
           </Text>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
