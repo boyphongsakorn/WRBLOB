@@ -378,7 +378,7 @@ function HomeScreen({navigation}) {
 
       console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
 
-      if (remoteMessage.notification?.android?.imageUrl) {
+      if (remoteMessage.notification?.android?.imageUrl != undefined) {
         //if remoteMessage.notification?.body have | and url: first split | and get url: second
         if (remoteMessage.notification?.body?.includes('|')) {
           const url = remoteMessage.notification?.body?.split('|')[1];
